@@ -1,6 +1,7 @@
 const userService = require("../service/userService");
 const { getUserByEmail } = require("../service/userService"); 
 const { loginUserWithToken } = require("../service/loginService")
+const { logoutUserWithToken } = require("../service/loginService");
 const statusCode = require('../helpers/statusCode');
 
 async function addUser(req, res) {
@@ -66,4 +67,16 @@ async function loginUser(req, res) {
   res.status(statusCode.OK).json({ token });
 }
 
-module.exports = { addUser, getUser, updateUser, deleteUser, loginUser }
+async function logoutUser(req, res) {
+  const token = req.headers.authorization;
+  
+  const newToken = await logoutUserWithToken(token);
+
+  if (newToken == "Token não encontrado") {
+    return res.status(statusCode.NOT_FOUND).json({ newToken})
+  }
+
+  res.status(statusCode.OK).json({ token });
+}
+
+module.exports = { addUser, getUser, updateUser, deleteUser, loginUser, logoutUser }

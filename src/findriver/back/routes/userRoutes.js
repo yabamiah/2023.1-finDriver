@@ -6,6 +6,8 @@ router.post("/cadastro", userController.addUser)
 
 router.post("/login", userController.loginUser)
 
+router.get("/logout", userController.logoutUser)
+
 router.get("/", userController.getUser)
 
 router.put("/editar/:id", userController.updateUser)
