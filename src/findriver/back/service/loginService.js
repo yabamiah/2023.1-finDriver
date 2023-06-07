@@ -22,22 +22,22 @@ async function loginUserWithToken(User) {
         const { data } = await supabase
             .from("Users")
             .select("id, email, password")
-            .eq('email', User.email);
+            .eq('email', userEmail);
         
-           if (await bcrypt.compareSync(User.password, (data[0].password).toString())) {
-
-            const token = jwt.sign(
-                { user: data },
-                process.env.TOKEN_KEY,
-            )
-
-        const config = {
-            headers: {
-              'Authorization': `Bearer ${token}`
+            if (bcrypt.compareSync(User.password, (data[0].password).toString())) {
+                const token = jwt.sign(
+                    { user: data },
+                    secret,
+                    { expiresIn: 86400},
+                    process.env.TOKEN_KEY,
+                )
+            const config = {
+                headers: {
+                'Authorization': `Bearer ${token}`
+                }
             }
-        }
 
-        return config;
+            return config;
     } else {
         return "Credenciais inválidas"
     }
@@ -47,4 +47,35 @@ async function loginUserWithToken(User) {
     }
 }
 
-module.exports = { loginUserWithToken };
+async function logoutUserWithToken(token) {
+    const { data, error } = await supabase
+        .from("Users")
+        .select("token")
+        .eq('token', token)
+
+    if (error) {
+        console.log("Token não encontrado");
+        throw error;
+    }
+
+    const decodedToken = jwt.verify(data[0].token , process.env.TOKEN_KEY);
+    decodedToken.exp = Math.floor(Date.now() / 1000) - 60;
+
+    const newPayload = {
+        user: decodedToken.user,
+    };
+    
+    const newToken = jwt.sign(newPayload, process.env.TOKEN_KEY);
+
+    const config = {
+        headers: {
+        'Authorization': `Bearer ${newToken}`
+        }
+    }
+
+    return config;
+}
+
+
+
+module.exports = { loginUserWithToken, logoutUserWithToken };
